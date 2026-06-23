@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <style>
   :root{
     --bg:#080a10; --bg2:#10131c; --panel:#151926; --panel2:#1d2230; --line:#272d3d;
@@ -197,6 +198,30 @@
     <button class="btn cyan" id="interBtn">Estou pronto</button>
   </div></section>
 
+  <!-- ===== LOBBY ONLINE ===== -->
+  <section id="lobby" class="screen"><div class="inter">
+    <h2>Jogar Online</h2>
+    <div id="lobbyChoice">
+      <p>Um jogador cria a sala e manda o código; o outro entra com o código.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+        <button class="btn" id="btnCreate">Criar Sala</button>
+        <button class="btn cyan" id="btnJoinUI">Entrar com Código</button>
+      </div>
+    </div>
+    <div id="lobbyHost" style="display:none">
+      <p>Seu código de sala (mande pro amigo):</p>
+      <div id="roomCode" style="font-family:'Teko';font-weight:700;font-size:60px;letter-spacing:.25em;color:var(--rei);filter:drop-shadow(0 0 18px rgba(87,217,255,.4))">····</div>
+      <p id="hostStatus" class="lead">Aguardando oponente…</p>
+    </div>
+    <div id="lobbyJoin" style="display:none">
+      <p>Digite o código da sala:</p>
+      <input id="codeInput" maxlength="4" placeholder="XXXX" style="text-transform:uppercase;font-family:'Teko';font-weight:600;font-size:38px;letter-spacing:.25em;text-align:center;width:180px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:8px;margin:6px 0">
+      <div style="margin-top:8px"><button class="btn cyan" id="btnConnect">Conectar</button></div>
+      <p id="joinStatus" class="lead"></p>
+    </div>
+    <div style="margin-top:18px"><button class="btn ghost sm" id="lobbyBack">Voltar</button></div>
+  </div></section>
+
   <!-- ===== DRAFT ===== -->
   <section id="draft" class="screen">
     <div class="draftHead"><div class="round" id="roundLbl">Rodada 1</div><h2 id="draftWho">Escolha <b>1</b> personagem</h2></div>
@@ -236,6 +261,7 @@ const MODES = {
   survival:{ic:"🔥",t:"Sobrevivência",d:"Monte 1 time e enfrente ondas de CPU cada vez mais fortes. Até onde você vai?"},
   hotseat:{ic:"👥",t:"2 Jogadores",d:"Mesma tela: cada amigo draft o seu time (sem espiar) e os times batalham."},
   caos:{ic:"💥",t:"Caos",d:"Tudo liberado: cartas EX sem limite e coleção inteira. Partida maluca."},
+  online:{ic:"🌐",t:"Online",d:"Jogue com um amigo de longe: crie uma sala, mande o código e batalhem em tempo real."},
 };
 const S = {mode:"padrao", vis:"classic", size:5, faction:"all", opts:10, canon:false, allowEX:true, speed:"normal"};
 let TA=[], TB=[], survLevel=1, survStreak=0;
@@ -265,7 +291,7 @@ function renderModes(){
   $('#modes').querySelectorAll('.mode2').forEach(el=>el.onclick=()=>{ S.mode=el.dataset.m; renderModes(); applyModeUI(); });
 }
 function applyModeUI(){
-  $('#goStart').textContent = S.mode==="survival"?"Iniciar Sobrevivência":S.mode==="hotseat"?"Iniciar (Jogador 1)":"Iniciar Draft";
+  $('#goStart').textContent = S.mode==="survival"?"Iniciar Sobrevivência":S.mode==="hotseat"?"Iniciar (Jogador 1)":S.mode==="online"?"Jogar Online":"Iniciar Draft";
   if(S.mode==="caos"){ S.allowEX=true; $('#tgEX').classList.add('on'); }
 }
 function seg(sel,btn){ $(sel).querySelectorAll('button').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
@@ -332,6 +358,7 @@ function draftCPU(level){
 
 /* ===== MODES ===== */
 function startGame(){
+  if(S.mode==="online"){ openLobby(); return; }
   if(S.mode==="hotseat"){
     startDraft(TA=[], "Jogador 1", ()=> interstitial("Passe para o Jogador 2","Sem espiar o time do oponente!",
       ()=> startDraft(TB=[], "Jogador 2", ()=> battleRun(TA,TB,"Jogador 1","Jogador 2",true,null))));
@@ -376,8 +403,8 @@ function simulateDuel(A,B){
 }
 
 let BS=null;
-function battleRun(teamA, teamB, labelA, labelB, pvp, onFinish, banner){
-  BS={a:0,b:0,skip:false,labelA,labelB,pvp,onFinish, lanes:teamA.map((aid,k)=>{const A=BYID[aid],B=BYID[teamB[k]];return {A,B,sim:simulateDuel(A,B)};})};
+function battleRun(teamA, teamB, labelA, labelB, pvp, onFinish, banner, presims){
+  BS={a:0,b:0,skip:false,labelA,labelB,pvp,onFinish, lanes:teamA.map((aid,k)=>{const A=BYID[aid],B=BYID[teamB[k]];return {A,B,sim:presims?presims[k]:simulateDuel(A,B)};})};
   $('#lblA').textContent=labelA; $('#lblB').textContent=labelB;
   $('#ptsA').textContent='0'; $('#ptsB').textContent='0'; $('#result').innerHTML='';
   const bn=$('#banner'); if(banner){ bn.style.display='block'; bn.textContent=banner; } else bn.style.display='none';
@@ -444,6 +471,68 @@ function finish(){
 }
 
 renderModes(); applyModeUI();
+
+/* ===== ONLINE (PeerJS, código de sala) ===== */
+let NET={};
+function genCode(){ const al='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<4;i++) s+=al[Math.floor(Math.random()*al.length)]; return s; }
+function openLobby(){ show('lobby'); $('#lobbyChoice').style.display=''; $('#lobbyHost').style.display='none'; $('#lobbyJoin').style.display='none'; }
+function netSend(o){ try{ if(NET.conn&&NET.conn.open) NET.conn.send(o); }catch(e){} }
+function flipSim(s){ return {winner:s.winner==='A'?'B':'A', mA:s.mB, mB:s.mA, invincible:s.invincible,
+  ev:s.ev.map(e=>({atk:e.atk==='A'?'B':'A', dmg:e.dmg, hpA:e.hpB, hpB:e.hpA}))}; }
+function netWait(msg){ $('#interTitle').textContent='Online'; $('#interMsg').textContent=msg; $('#interBtn').style.display='none'; show('inter'); }
+
+$('#lobbyBack').onclick=()=>{ try{NET.peer&&NET.peer.destroy();}catch(e){} NET={}; $('#interBtn').style.display=''; show('home'); };
+$('#btnJoinUI').onclick=()=>{ $('#lobbyChoice').style.display='none'; $('#lobbyJoin').style.display=''; $('#joinStatus').textContent=''; $('#codeInput').focus(); };
+$('#btnCreate').onclick=()=>{
+  if(typeof Peer==="undefined"){ toast("Sem conexão com o serviço online."); return; }
+  NET={isHost:true,code:genCode(),myTeam:null,oppTeam:null};
+  $('#lobbyChoice').style.display='none'; $('#lobbyHost').style.display=''; $('#roomCode').textContent='····'; $('#hostStatus').textContent='Criando sala…';
+  NET.peer=new Peer('bsb-'+NET.code,{debug:1});
+  NET.peer.on('open',()=>{ $('#roomCode').textContent=NET.code; $('#hostStatus').textContent='Aguardando oponente entrar…'; });
+  NET.peer.on('connection',c=>{ NET.conn=c; bindConn(); });
+  NET.peer.on('error',e=>{ $('#hostStatus').textContent='Erro ('+(e.type||'')+'). Tente recriar.'; });
+};
+$('#btnConnect').onclick=()=>{
+  if(typeof Peer==="undefined"){ toast("Sem conexão com o serviço online."); return; }
+  const code=($('#codeInput').value||'').trim().toUpperCase(); if(code.length<4){ $('#joinStatus').textContent='Código inválido.'; return; }
+  NET={isHost:false,myTeam:null,oppTeam:null}; $('#joinStatus').textContent='Conectando…';
+  NET.peer=new Peer({debug:1});
+  NET.peer.on('open',()=>{ NET.conn=NET.peer.connect('bsb-'+code,{reliable:true}); bindConn(); });
+  NET.peer.on('error',e=>{ $('#joinStatus').textContent= (e.type==='peer-unavailable'?'Sala não encontrada.':'Erro ('+(e.type||'')+').'); });
+};
+function bindConn(){
+  NET.conn.on('open',()=>{
+    if(NET.isHost){ $('#hostStatus').textContent='Conectado! Iniciando draft…';
+      netSend({t:'config',cfg:{size:S.size,vis:S.vis,faction:S.faction,opts:S.opts,canon:S.canon,allowEX:S.allowEX}});
+      startOnlineDraft();
+    } else $('#joinStatus').textContent='Conectado! Recebendo regras…';
+  });
+  NET.conn.on('data',onNetData);
+  NET.conn.on('close',()=>toast('O oponente saiu da partida.'));
+  NET.conn.on('error',()=>toast('Erro de conexão.'));
+}
+function onNetData(m){
+  if(m.t==='config'){ S.mode='online'; S.size=m.cfg.size; S.vis=m.cfg.vis; S.faction=m.cfg.faction; S.opts=m.cfg.opts; S.canon=m.cfg.canon; S.allowEX=m.cfg.allowEX; startOnlineDraft(); }
+  else if(m.t==='team'){ NET.oppTeam=m.team; hostTryBattle(); }
+  else if(m.t==='battle'){ battleRun(m.guestTeam, m.hostTeam, 'Você', 'Oponente', true, onlineFinish, null, m.sims.map(flipSim)); }
+  else if(m.t==='rematch'){ startOnlineDraft(); }
+}
+function startOnlineDraft(){
+  NET.myTeam=null; NET.oppTeam=null;
+  startDraft([], 'Seu time — Online', ()=>{ NET.myTeam=DR.target.slice(); netSend({t:'team',team:NET.myTeam}); netWait('Aguardando o oponente terminar o draft…'); hostTryBattle(); });
+}
+function hostTryBattle(){
+  if(NET.isHost && NET.myTeam && NET.oppTeam){
+    const sims=NET.myTeam.map((aid,k)=>simulateDuel(BYID[aid],BYID[NET.oppTeam[k]]));
+    netSend({t:'battle',hostTeam:NET.myTeam,guestTeam:NET.oppTeam,sims});
+    battleRun(NET.myTeam, NET.oppTeam, 'Você', 'Oponente', true, onlineFinish, null, sims);
+  }
+}
+function onlineFinish(aWon){
+  $('#battlebar').innerHTML='<button class="btn cyan sm" id="orematch">Nova partida</button><button class="btn ghost sm" id="oleave">Sair</button>';
+  $('#orematch').onclick=()=>{ netSend({t:'rematch'}); startOnlineDraft(); };
+  $('#oleave').onclick=()=>{ try{NET.peer&&NET.peer.destroy();}catch(e){} NET={}; $('#interBtn').style.display=''; show('home'); };
+}
 </script>
 </body>
 </html>
