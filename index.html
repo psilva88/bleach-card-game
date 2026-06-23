@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLEACH — Squad Battle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080a10; --bg2:#10131c; --panel:#151926; --panel2:#1d2230; --line:#272d3d;
+    --ink:#eef1f6; --ash:#8b93a7;
+    --vm:#ff3b2f; --vm-deep:#d11d11; --rei:#57d9ff; --rei-deep:#1aa7e0;
+    --gold:#f0c24a; --silver:#d3d8e0; --bronze:#c08a52; --leg:#ff9a3d; --mit:#ff5a3a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(70% 50% at 18% 0%, rgba(87,217,255,.10), transparent 60%),
+      radial-gradient(70% 55% at 85% 8%, rgba(255,59,47,.12), transparent 60%),
+      radial-gradient(90% 70% at 50% 120%, rgba(255,59,47,.06), transparent 55%), var(--bg);
+    color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100%;
+    -webkit-font-smoothing:antialiased; padding:18px 14px 80px;
+  }
+  .wrap{width:100%; max-width:1120px; margin:0 auto}
+  h1,h2,h3,.teko{font-family:'Teko',sans-serif; font-weight:600; letter-spacing:.02em}
+  .brand{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:6px}
+  .brand .word{font-family:'Teko'; font-weight:700; font-size:clamp(46px,10vw,92px); line-height:.8;
+    text-transform:uppercase; letter-spacing:.02em; transform:skewX(-7deg);
+    background:linear-gradient(180deg,#ff6a52,var(--vm) 55%,var(--vm-deep));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 4px 18px rgba(255,59,47,.5));}
+  .brand .bar{width:3px; height:54px; background:linear-gradient(180deg,var(--rei),transparent); border-radius:3px; box-shadow:0 0 14px var(--rei)}
+  .tag{text-align:center; color:var(--ash); letter-spacing:.4em; font-size:11px; text-transform:uppercase; margin:2px 0 22px}
+  .screen{display:none; animation:fade .32s ease}
+  .screen.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .panel{background:linear-gradient(180deg,rgba(30,35,48,.7),rgba(16,19,28,.7)); border:1px solid var(--line); border-radius:16px; padding:20px; backdrop-filter:blur(4px)}
+  .btn{font-family:'Teko'; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; border:none;
+    border-radius:11px; padding:11px 30px; font-size:21px; color:#fff;
+    background:linear-gradient(180deg,#ff6a52,var(--vm)); transition:.15s; box-shadow:0 8px 26px rgba(255,59,47,.32)}
+  .btn:hover{filter:brightness(1.07); transform:translateY(-1px)}
+  .btn:disabled{opacity:.3; cursor:not-allowed; filter:grayscale(.6); box-shadow:none}
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--ink); box-shadow:none}
+  .btn.ghost:hover{border-color:var(--rei); color:#fff}
+  .btn.cyan{background:linear-gradient(180deg,#7ee3ff,var(--rei-deep)); box-shadow:0 8px 26px rgba(87,217,255,.28); color:#04222e}
+  .btn.sm{padding:7px 16px; font-size:16px}
+  .center{text-align:center}
+  .lead{font-size:14px; color:#c4cad8; max-width:620px; margin:0 auto 20px; text-align:center; line-height:1.6}
+
+  /* ===== MODES ===== */
+  .modes2{display:grid; grid-template-columns:repeat(4,1fr); gap:11px; max-width:760px; margin:0 auto 18px}
+  .mode2{cursor:pointer; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:14px; transition:.15s; position:relative}
+  .mode2:hover{border-color:#3a4358; transform:translateY(-2px)}
+  .mode2.on{border-color:var(--vm); background:rgba(255,59,47,.12); box-shadow:0 0 0 1px var(--vm),0 0 22px -6px var(--vm)}
+  .mode2 h3{font-size:23px; line-height:.9; text-transform:uppercase}
+  .mode2 p{font-size:11.5px; color:var(--ash); line-height:1.4; margin-top:5px}
+  .mode2 .ic{font-size:18px; margin-bottom:2px}
+
+  /* ===== SETTINGS ===== */
+  .cfg{display:grid; gap:12px; max-width:660px; margin:0 auto 16px}
+  .cfg .row{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:12px 16px}
+  .cfg .lbl{font-family:'Teko'; font-size:18px; letter-spacing:.08em; color:var(--rei); text-transform:uppercase; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center}
+  .cfg .lbl .v{color:var(--ink); font-size:16px}
+  .seg{display:flex; flex-wrap:wrap; gap:7px}
+  .seg button{flex:1; min-width:78px; cursor:pointer; background:var(--panel2); border:1px solid var(--line); color:var(--ink); border-radius:9px; padding:9px 8px; font-size:13px; font-weight:600; transition:.14s}
+  .seg button:hover{border-color:#3a4358}
+  .seg button.on{border-color:var(--vm); background:rgba(255,59,47,.16); box-shadow:inset 0 0 0 1px var(--vm)}
+  input[type=range]{width:100%; accent-color:var(--vm); height:6px}
+  .toggles{display:flex; gap:10px; flex-wrap:wrap}
+  .tg{flex:1; min-width:200px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:11px 14px; cursor:pointer}
+  .tg span{font-size:13px; font-weight:600}
+  .sw{width:42px; height:24px; border-radius:14px; background:#333a4a; position:relative; transition:.16s; flex:none}
+  .sw::after{content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.16s}
+  .tg.on .sw{background:var(--vm)} .tg.on .sw::after{left:21px}
+  .note{font-size:12px; color:var(--ash); text-align:center; max-width:600px; margin:0 auto 16px}
+
+  /* ===== CARD ===== */
+  .card{position:relative; aspect-ratio:275/409; border-radius:13px; cursor:pointer; background:#05060a; overflow:hidden; transition:transform .16s, box-shadow .16s; user-select:none; box-shadow:0 2px 10px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05)}
+  .card:hover{transform:translateY(-4px) scale(1.015)}
+  .card .art{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center top}
+  .card .scrim{position:absolute; inset:0; background:linear-gradient(180deg,transparent 42%,rgba(5,6,10,.92) 100%)}
+  .card .ovr{position:absolute; top:7px; left:7px; z-index:3; min-width:30px; text-align:center; padding:2px 0; background:rgba(5,6,10,.65); border-radius:8px; border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(2px)}
+  .card .ovr b{font-family:'Teko'; font-weight:700; font-size:25px; line-height:.85; display:block; color:#fff}
+  .card .ovr span{font-size:7px; letter-spacing:.14em; color:var(--ash); display:block}
+  .card .nm{position:absolute; left:8px; right:8px; bottom:17px; z-index:3; font-family:'Teko'; font-weight:600; font-size:17px; line-height:.95; text-shadow:0 1px 5px #000}
+  .card .fm{position:absolute; left:8px; right:8px; bottom:6px; z-index:3; font-size:8.5px; letter-spacing:.05em; color:var(--rei); font-weight:600; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .card .badge{position:absolute; top:7px; right:7px; z-index:3; font-family:'Teko'; font-size:12px; font-weight:600; padding:1px 7px; border-radius:6px; letter-spacing:.06em; text-transform:uppercase}
+  .card .edge{position:absolute; inset:0; border-radius:13px; pointer-events:none; z-index:2}
+  .tBronze{--g:var(--bronze)} .tPrata{--g:var(--silver)} .tOuro{--g:var(--gold)}
+  .tLendária{--g:var(--leg)} .tMítica{--g:var(--mit)} .tEX{--g:#ff4db8}
+  .card .edge{box-shadow:inset 0 0 0 1.5px var(--g), 0 0 16px -2px var(--g)}
+  .card .badge{background:var(--g); color:#0a0a0a}
+  .card.tMítica .badge,.card.tEX .badge{color:#fff}
+  .card.tMítica .shine,.card.tEX .shine{position:absolute; inset:0; z-index:2; pointer-events:none; mix-blend-mode:screen; background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.22) 48%,transparent 58%); background-size:250% 250%; animation:foil 4.5s linear infinite}
+  @keyframes foil{0%{background-position:140% 0}100%{background-position:-40% 0}}
+  .card.inv{box-shadow:0 0 0 2px var(--gold), 0 0 28px rgba(240,194,74,.55)}
+
+  /* ===== DRAFT ===== */
+  .draftHead{text-align:center; margin-bottom:14px}
+  .draftHead .round{font-family:'Teko'; font-size:16px; letter-spacing:.18em; color:var(--rei); text-transform:uppercase}
+  .draftHead h2{font-size:34px; line-height:.9; text-transform:uppercase}
+  .draftHead h2 b{color:var(--vm)}
+  .opts{display:grid; gap:11px; margin-bottom:20px}
+  .team{display:flex; gap:9px; justify-content:center; flex-wrap:wrap; padding-top:14px; border-top:1px solid var(--line)}
+  .team .tslot{width:74px}
+  .team .empty{width:74px; aspect-ratio:275/409; border:1.5px dashed var(--line); border-radius:11px; display:flex; align-items:center; justify-content:center; color:var(--ash); font-family:'Teko'; font-size:24px}
+  .teamlbl{text-align:center; font-family:'Teko'; font-size:16px; letter-spacing:.1em; color:var(--ash); text-transform:uppercase; margin:8px 0 4px}
+
+  /* ===== INTERSTITIAL ===== */
+  .inter{text-align:center; padding:56px 16px}
+  .inter h2{font-size:46px; text-transform:uppercase; line-height:.9}
+  .inter p{color:var(--ash); margin:10px auto 26px; max-width:380px; font-size:14px}
+
+  /* ===== BATTLE ===== */
+  .banner{text-align:center; font-family:'Teko'; font-size:20px; letter-spacing:.06em; color:var(--gold); text-transform:uppercase; margin-bottom:10px}
+  .scoreboard{display:flex; align-items:center; justify-content:center; gap:24px; margin-bottom:16px}
+  .scoreboard .side{text-align:center; min-width:90px}
+  .scoreboard .nm2{font-family:'Teko'; font-size:18px; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .scoreboard .pts{font-family:'Teko'; font-weight:700; font-size:58px; line-height:.8}
+  .scoreboard .vs{font-family:'Teko'; font-size:24px; color:var(--ash)}
+  .lanes{display:flex; flex-direction:column; gap:9px}
+  .lane{display:grid; grid-template-columns:1fr minmax(72px,104px) 1fr; gap:10px; align-items:center; background:linear-gradient(180deg,rgba(30,35,48,.5),rgba(16,19,28,.5)); border:1px solid var(--line); border-radius:13px; padding:9px 10px; opacity:.4; transition:opacity .35s, box-shadow .3s}
+  .lane.live{opacity:1; box-shadow:0 0 0 1px rgba(87,217,255,.25), 0 0 22px -6px var(--rei)}
+  .lane.done-a{box-shadow:inset 5px 0 0 var(--rei)} .lane.done-b{box-shadow:inset -5px 0 0 var(--vm)}
+  .ftr{display:flex; align-items:center; gap:10px; min-width:0}
+  .ftr.right{flex-direction:row-reverse; text-align:right}
+  .ftr .mini{width:50px; height:70px; border-radius:8px; background:#05060a center/cover; flex:none; position:relative; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .ftr .mini.hit{animation:hit .25s}
+  @keyframes hit{0%{filter:brightness(2.6) saturate(1.4)}100%{filter:none}}
+  .ftr .meta{min-width:0; flex:1}
+  .ftr .meta b{font-family:'Teko'; font-weight:600; font-size:20px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1}
+  .ftr .meta .o{font-size:10px; color:var(--ash); letter-spacing:.08em}
+  .hpwrap{height:9px; border-radius:6px; background:rgba(255,59,47,.16); overflow:hidden; margin-top:5px; box-shadow:inset 0 0 4px rgba(0,0,0,.5)}
+  .hpwrap > i{display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--rei-deep),var(--rei)); transition:width .16s linear; box-shadow:0 0 8px var(--rei)}
+  .ftr.right .hpwrap > i{margin-left:auto; background:linear-gradient(270deg,var(--rei-deep),var(--rei))}
+  .hpwrap > i.low{background:linear-gradient(90deg,var(--vm-deep),var(--vm))!important; box-shadow:0 0 8px var(--vm)}
+  .dmg{position:absolute; left:50%; top:24%; transform:translateX(-50%); font-family:'Teko'; font-weight:700; font-size:20px; color:#fff; text-shadow:0 1px 4px #000,0 0 8px var(--vm); pointer-events:none; animation:flo .7s ease-out forwards}
+  @keyframes flo{0%{opacity:1;transform:translate(-50%,4px)}100%{opacity:0;transform:translate(-50%,-26px)}}
+  .duelmid{text-align:center; font-size:10px; color:var(--ash)}
+  .duelmid .odds{font-family:'Teko'; font-size:17px; color:var(--ink); letter-spacing:.04em}
+  .winflag{font-family:'Teko'; font-size:15px; letter-spacing:.06em; margin-top:2px}
+  .result{text-align:center; margin-top:20px}
+  .result h2{font-family:'Teko'; font-weight:700; font-size:clamp(40px,8vw,72px); line-height:.85; text-transform:uppercase}
+  .result .win{color:var(--rei); filter:drop-shadow(0 0 26px rgba(87,217,255,.55))}
+  .result .lose{color:var(--vm); filter:drop-shadow(0 0 26px rgba(255,59,47,.5))}
+  .battlebar{display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap}
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); background:#1a1020; border:1px solid var(--vm); color:var(--ink); padding:11px 18px; border-radius:11px; font-size:13px; z-index:50; opacity:0; transition:.25s; pointer-events:none}
+  .toast.show{opacity:1}
+  .footer{margin-top:30px; text-align:center; color:var(--ash); font-size:11px; line-height:1.7}
+  .footer code{color:var(--rei)}
+  @media (max-width:620px){
+    .modes2{grid-template-columns:repeat(2,1fr)}
+    .scoreboard .pts{font-size:44px}
+    .lane{grid-template-columns:1fr 64px 1fr; padding:7px; gap:6px}
+    .ftr .mini{width:40px; height:56px}
+    .ftr .meta b{font-size:16px}
+    .team .tslot,.team .empty{width:60px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important; transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="bar"></span><span class="word">Bleach</span><span class="bar"></span></div>
+  <div class="tag">Squad Battle</div>
+
+  <!-- ===== HOME / EDITOR ===== -->
+  <section id="home" class="screen on">
+    <div class="modes2" id="modes"></div>
+    <p class="note" id="modeDesc"></p>
+    <div class="cfg">
+      <div class="row"><div class="lbl">Visibilidade</div><div class="seg" id="segVis">
+        <button data-v="classic" class="on">Clássico</button><button data-v="blind">Às Cegas</button></div></div>
+      <div class="row"><div class="lbl">Tamanho do time</div><div class="seg" id="segSize">
+        <button data-s="3">3 v 3</button><button data-s="5" class="on">5 v 5</button><button data-s="7">7 v 7</button></div></div>
+      <div class="row"><div class="lbl">Cartas por rodada do draft <span class="v" id="optsV">10</span></div>
+        <input type="range" id="optsR" min="2" max="10" value="10" step="1"></div>
+      <div class="row"><div class="lbl">Coleção</div><div class="toggles">
+        <div class="tg" id="tgCanon"><span>Apenas canônicas (sem Brave Souls)</span><div class="sw"></div></div>
+        <div class="tg on" id="tgEX"><span>Permitir cartas EX (grupos/deuses)</span><div class="sw"></div></div>
+      </div></div>
+      <div class="row"><div class="lbl">Facção</div><div class="seg" id="segFac">
+        <button data-f="all" class="on">Livre</button><button data-f="Shinigami">Shinigami</button>
+        <button data-f="Hollow">Hollow</button><button data-f="Arrancar">Arrancar</button>
+        <button data-f="Quincy">Quincy</button><button data-f="Vizard">Vizard</button></div></div>
+    </div>
+    <div class="center"><button class="btn" id="goStart">Iniciar</button></div>
+  </section>
+
+  <!-- ===== INTERSTITIAL (hotseat) ===== -->
+  <section id="inter" class="screen"><div class="inter">
+    <h2 id="interTitle">Passe para o Jogador 2</h2>
+    <p id="interMsg">Sem espiar! Quando o próximo jogador estiver pronto, comece o draft.</p>
+    <button class="btn cyan" id="interBtn">Estou pronto</button>
+  </div></section>
+
+  <!-- ===== DRAFT ===== -->
+  <section id="draft" class="screen">
+    <div class="draftHead"><div class="round" id="roundLbl">Rodada 1</div><h2 id="draftWho">Escolha <b>1</b> personagem</h2></div>
+    <div class="opts" id="opts"></div>
+    <div class="teamlbl" id="teamLbl">Seu Esquadrão</div>
+    <div class="team" id="team"></div>
+  </section>
+
+  <!-- ===== BATTLE ===== -->
+  <section id="battle" class="screen">
+    <div class="banner" id="banner" style="display:none"></div>
+    <div class="scoreboard">
+      <div class="side"><div class="nm2" id="lblA" style="color:var(--rei)">Você</div><div class="pts" id="ptsA" style="color:var(--rei)">0</div></div>
+      <div class="vs">×</div>
+      <div class="side"><div class="nm2" id="lblB" style="color:var(--vm)">CPU</div><div class="pts" id="ptsB" style="color:var(--vm)">0</div></div>
+    </div>
+    <div class="lanes" id="lanes"></div>
+    <div class="battlebar" id="battlebar"></div>
+    <div class="result" id="result"></div>
+  </section>
+
+  <div class="footer">
+    Jogos locais (vs CPU e 2 jogadores na mesma tela). Online por código de sala = próxima fase.<br>
+    <code>P(A)=1/(1+10^((OvrB−OvrA)/20))</code> · Vida=f(DEF,REI) · Dano=f(ATK)
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CARDS = [{"id":"001","nome":"Genryūsai Shigekuni Yamamoto","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":90,"reiatsu":92,"ataque":95,"defesa":85,"velocidade":80,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"002","nome":"Genryūsai Shigekuni Yamamoto","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":95,"ataque":99,"defesa":90,"velocidade":82,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"003","nome":"Genryūsai Shigekuni Yamamoto","forma":"Prime","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":97,"ataque":99,"defesa":92,"velocidade":88,"tecnica":95,"tier":"Mítica","ex":false,"invencivel":false},{"id":"004","nome":"Shunsui Kyōraku","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":85,"reiatsu":84,"ataque":86,"defesa":82,"velocidade":86,"tecnica":90,"tier":"Ouro","ex":false,"invencivel":false},{"id":"005","nome":"Shunsui Kyōraku","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":92,"reiatsu":90,"ataque":92,"defesa":86,"velocidade":88,"tecnica":95,"tier":"Lendária","ex":false,"invencivel":false},{"id":"006","nome":"Kenpachi Zaraki","forma":"Base","tipo":"Shinigami","tipo2":[],"overall":84,"reiatsu":86,"ataque":95,"defesa":84,"velocidade":80,"tecnica":55,"tier":"Ouro","ex":false,"invencivel":false},{"id":"007","nome":"Kenpachi Zaraki","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":91,"reiatsu":92,"ataque":98,"defesa":86,"velocidade":84,"tecnica":60,"tier":"Lendária","ex":false,"invencivel":false},{"id":"008","nome":"Kenpachi Zaraki","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":95,"reiatsu":95,"ataque":99,"defesa":88,"velocidade":86,"tecnica":62,"tier":"Lendária","ex":false,"invencivel":false},{"id":"009","nome":"Retsu Unohana","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":88,"reiatsu":88,"ataque":88,"defesa":84,"velocidade":86,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"010","nome":"Retsu Unohana","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":92,"reiatsu":90,"ataque":92,"defesa":88,"velocidade":88,"tecnica":94,"tier":"Lendária","ex":false,"invencivel":false},{"id":"011","nome":"Retsu Unohana","forma":"Prime","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":92,"ataque":95,"defesa":90,"velocidade":90,"tecnica":95,"tier":"Lendária","ex":false,"invencivel":false},{"id":"012","nome":"Tōshirō Hitsugaya","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":80,"ataque":81,"defesa":76,"velocidade":85,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"013","nome":"Tōshirō Hitsugaya","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":88,"reiatsu":86,"ataque":88,"defesa":82,"velocidade":90,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"014","nome":"Tōshirō Hitsugaya","forma":"Adulto","tipo":"Shinigami","tipo2":[],"overall":92,"reiatsu":90,"ataque":92,"defesa":86,"velocidade":93,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"015","nome":"Byakuya Kuchiki","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":84,"reiatsu":82,"ataque":86,"defesa":78,"velocidade":90,"tecnica":88,"tier":"Ouro","ex":false,"invencivel":false},{"id":"016","nome":"Byakuya Kuchiki","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":89,"reiatsu":86,"ataque":90,"defesa":82,"velocidade":92,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"017","nome":"Mayuri Kurotsuchi","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":80,"reiatsu":78,"ataque":78,"defesa":74,"velocidade":72,"tecnica":96,"tier":"Ouro","ex":false,"invencivel":false},{"id":"018","nome":"Mayuri Kurotsuchi","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":85,"reiatsu":82,"ataque":84,"defesa":80,"velocidade":74,"tecnica":97,"tier":"Ouro","ex":false,"invencivel":false},{"id":"019","nome":"Mayuri Kurotsuchi","forma":"Bankai da Guerra","tipo":"Shinigami","tipo2":[],"overall":89,"reiatsu":85,"ataque":88,"defesa":84,"velocidade":78,"tecnica":99,"tier":"Lendária","ex":false,"invencivel":false},{"id":"020","nome":"Gin Ichimaru","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":82,"ataque":86,"defesa":76,"velocidade":90,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"021","nome":"Gin Ichimaru","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":89,"reiatsu":86,"ataque":92,"defesa":80,"velocidade":92,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"022","nome":"Sajin Komamura","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":80,"reiatsu":80,"ataque":86,"defesa":82,"velocidade":70,"tecnica":72,"tier":"Ouro","ex":false,"invencivel":false},{"id":"023","nome":"Sajin Komamura","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":85,"reiatsu":84,"ataque":90,"defesa":86,"velocidade":72,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"024","nome":"Sajin Komamura","forma":"Bankai da Guerra","tipo":"Shinigami","tipo2":[],"overall":88,"reiatsu":86,"ataque":94,"defesa":88,"velocidade":80,"tecnica":72,"tier":"Lendária","ex":false,"invencivel":false},{"id":"025","nome":"Shinji Hirako","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":83,"reiatsu":82,"ataque":82,"defesa":78,"velocidade":84,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"026","nome":"Shinji Hirako","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":87,"reiatsu":85,"ataque":86,"defesa":80,"velocidade":86,"tecnica":88,"tier":"Ouro","ex":false,"invencivel":false},{"id":"027","nome":"Shinji Hirako","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":90,"reiatsu":88,"ataque":90,"defesa":82,"velocidade":90,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"028","nome":"Kaname Tōsen","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":80,"reiatsu":78,"ataque":80,"defesa":76,"velocidade":86,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"029","nome":"Kaname Tōsen","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":84,"reiatsu":82,"ataque":84,"defesa":78,"velocidade":88,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"030","nome":"Kaname Tōsen","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":86,"reiatsu":84,"ataque":86,"defesa":80,"velocidade":88,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"031","nome":"Kaname Tōsen","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":89,"reiatsu":88,"ataque":90,"defesa":82,"velocidade":90,"tecnica":82,"tier":"Lendária","ex":false,"invencivel":false},{"id":"032","nome":"Kensei Muguruma","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":81,"reiatsu":80,"ataque":84,"defesa":80,"velocidade":82,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"033","nome":"Kensei Muguruma","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":85,"reiatsu":83,"ataque":88,"defesa":82,"velocidade":84,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"034","nome":"Kensei Muguruma","forma":"Hollowfication","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":88,"reiatsu":86,"ataque":92,"defesa":84,"velocidade":86,"tecnica":78,"tier":"Lendária","ex":false,"invencivel":false},{"id":"035","nome":"Jūshirō Ukitake","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":82,"ataque":82,"defesa":80,"velocidade":84,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"036","nome":"Jūshirō Ukitake","forma":"Mão Direita do Rei das Almas","tipo":"Shinigami","tipo2":["Divino"],"overall":90,"reiatsu":92,"ataque":86,"defesa":86,"velocidade":84,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"037","nome":"Suì-Fēng","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":81,"reiatsu":78,"ataque":84,"defesa":74,"velocidade":92,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"038","nome":"Suì-Fēng","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":85,"reiatsu":82,"ataque":90,"defesa":74,"velocidade":93,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"039","nome":"Rōjūrō Ōtoribashi","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":79,"reiatsu":80,"ataque":80,"defesa":76,"velocidade":80,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"040","nome":"Rōjūrō Ōtoribashi","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":83,"reiatsu":83,"ataque":84,"defesa":78,"velocidade":82,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"041","nome":"Rōjūrō Ōtoribashi","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":86,"reiatsu":85,"ataque":86,"defesa":80,"velocidade":85,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"042","nome":"Love Aikawa","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":80,"reiatsu":80,"ataque":86,"defesa":80,"velocidade":78,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"043","nome":"Love Aikawa","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":85,"reiatsu":83,"ataque":90,"defesa":82,"velocidade":82,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"044","nome":"Mashiro Kuna","forma":"Base","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":78,"reiatsu":78,"ataque":82,"defesa":74,"velocidade":84,"tecnica":70,"tier":"Ouro","ex":false,"invencivel":false},{"id":"045","nome":"Mashiro Kuna","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":84,"reiatsu":82,"ataque":88,"defesa":78,"velocidade":88,"tecnica":72,"tier":"Ouro","ex":false,"invencivel":false},{"id":"046","nome":"Hiyori Sarugaki","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":76,"reiatsu":76,"ataque":80,"defesa":72,"velocidade":80,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"047","nome":"Hiyori Sarugaki","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":82,"reiatsu":80,"ataque":86,"defesa":76,"velocidade":84,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"048","nome":"Lisa Yadōmaru","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":78,"reiatsu":78,"ataque":82,"defesa":74,"velocidade":82,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"049","nome":"Lisa Yadōmaru","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":84,"reiatsu":82,"ataque":86,"defesa":78,"velocidade":86,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"050","nome":"Hachigen Ushōda","forma":"Base","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":80,"reiatsu":84,"ataque":74,"defesa":82,"velocidade":70,"tecnica":90,"tier":"Ouro","ex":false,"invencivel":false},{"id":"051","nome":"Hachigen Ushōda","forma":"Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":85,"reiatsu":88,"ataque":78,"defesa":86,"velocidade":74,"tecnica":92,"tier":"Ouro","ex":false,"invencivel":false},{"id":"052","nome":"Kenpachi Azashiro","forma":"","tipo":"Shinigami","tipo2":[],"overall":93,"reiatsu":92,"ataque":95,"defesa":88,"velocidade":88,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"053","nome":"Kenpachi Kuruyashiki","forma":"","tipo":"Shinigami","tipo2":[],"overall":92,"reiatsu":90,"ataque":96,"defesa":86,"velocidade":84,"tecnica":80,"tier":"Lendária","ex":false,"invencivel":false},{"id":"054","nome":"Tokinada Tsunayashiro","forma":"","tipo":"Shinigami","tipo2":[],"overall":91,"reiatsu":92,"ataque":88,"defesa":84,"velocidade":86,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"055","nome":"Kisuke Urahara","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":88,"reiatsu":88,"ataque":84,"defesa":82,"velocidade":88,"tecnica":96,"tier":"Lendária","ex":false,"invencivel":false},{"id":"056","nome":"Kisuke Urahara","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":92,"reiatsu":90,"ataque":88,"defesa":86,"velocidade":90,"tecnica":99,"tier":"Lendária","ex":false,"invencivel":false},{"id":"057","nome":"Yoruichi Shihōin","forma":"Base","tipo":"Shinigami","tipo2":[],"overall":87,"reiatsu":84,"ataque":86,"defesa":80,"velocidade":99,"tecnica":88,"tier":"Ouro","ex":false,"invencivel":false},{"id":"058","nome":"Yoruichi Shihōin","forma":"Raijū Senkei","tipo":"Shinigami","tipo2":[],"overall":91,"reiatsu":88,"ataque":92,"defesa":82,"velocidade":99,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"059","nome":"Jin Kariya","forma":"","tipo":"Humano","tipo2":[],"overall":82,"reiatsu":84,"ataque":84,"defesa":78,"velocidade":84,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"060","nome":"Shūsuke Amagai","forma":"","tipo":"Shinigami","tipo2":[],"overall":83,"reiatsu":82,"ataque":86,"defesa":80,"velocidade":82,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"061","nome":"Kōga Kuchiki","forma":"","tipo":"Shinigami","tipo2":[],"overall":84,"reiatsu":84,"ataque":86,"defesa":80,"velocidade":84,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"062","nome":"Ōko Yushima","forma":"","tipo":"Shinigami","tipo2":[],"overall":88,"reiatsu":90,"ataque":86,"defesa":84,"velocidade":86,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"063","nome":"Ichibei Hyōsube","forma":"","tipo":"Shinigami","tipo2":["Divino"],"overall":96,"reiatsu":96,"ataque":94,"defesa":93,"velocidade":90,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"064","nome":"Tenjirō Kirinji","forma":"","tipo":"Shinigami","tipo2":["Divino"],"overall":92,"reiatsu":88,"ataque":90,"defesa":86,"velocidade":92,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"065","nome":"Kirio Hikifune","forma":"","tipo":"Shinigami","tipo2":["Divino"],"overall":91,"reiatsu":92,"ataque":84,"defesa":86,"velocidade":82,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"066","nome":"Senjumaru Shutara","forma":"","tipo":"Shinigami","tipo2":["Divino"],"overall":92,"reiatsu":88,"ataque":86,"defesa":88,"velocidade":84,"tecnica":94,"tier":"Lendária","ex":false,"invencivel":false},{"id":"067","nome":"Ōetsu Nimaiya","forma":"","tipo":"Shinigami","tipo2":["Divino"],"overall":93,"reiatsu":90,"ataque":93,"defesa":87,"velocidade":91,"tecnica":93,"tier":"Lendária","ex":false,"invencivel":false},{"id":"068","nome":"Isshin Kurosaki","forma":"","tipo":"Shinigami","tipo2":[],"overall":88,"reiatsu":88,"ataque":90,"defesa":84,"velocidade":88,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"069","nome":"Masaki Kurosaki","forma":"","tipo":"Quincy","tipo2":[],"overall":80,"reiatsu":82,"ataque":82,"defesa":76,"velocidade":82,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"070","nome":"White","forma":"","tipo":"Hollow","tipo2":[],"overall":78,"reiatsu":80,"ataque":84,"defesa":72,"velocidade":80,"tecnica":60,"tier":"Ouro","ex":false,"invencivel":false},{"id":"071","nome":"Chōjirō Sasakibe","forma":"","tipo":"Shinigami","tipo2":[],"overall":81,"reiatsu":82,"ataque":80,"defesa":78,"velocidade":82,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"072","nome":"Marechiyo Ōmaeda","forma":"","tipo":"Shinigami","tipo2":[],"overall":66,"reiatsu":64,"ataque":70,"defesa":68,"velocidade":60,"tecnica":58,"tier":"Prata","ex":false,"invencivel":false},{"id":"073","nome":"Ikkaku Madarame","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":76,"reiatsu":74,"ataque":82,"defesa":76,"velocidade":76,"tecnica":66,"tier":"Ouro","ex":false,"invencivel":false},{"id":"074","nome":"Ikkaku Madarame","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":80,"ataque":88,"defesa":80,"velocidade":78,"tecnica":66,"tier":"Ouro","ex":false,"invencivel":false},{"id":"075","nome":"Yachiru Kusajishi","forma":"","tipo":"Shinigami","tipo2":[],"overall":70,"reiatsu":72,"ataque":70,"defesa":64,"velocidade":84,"tecnica":66,"tier":"Prata","ex":false,"invencivel":false},{"id":"076","nome":"Renji Abarai","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":75,"reiatsu":74,"ataque":78,"defesa":70,"velocidade":74,"tecnica":68,"tier":"Ouro","ex":false,"invencivel":false},{"id":"077","nome":"Renji Abarai","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":80,"ataque":86,"defesa":76,"velocidade":78,"tecnica":72,"tier":"Ouro","ex":false,"invencivel":false},{"id":"078","nome":"Renji Abarai","forma":"True Bankai","tipo":"Shinigami","tipo2":[],"overall":87,"reiatsu":84,"ataque":90,"defesa":80,"velocidade":82,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"079","nome":"Izuru Kira","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":74,"reiatsu":72,"ataque":74,"defesa":70,"velocidade":74,"tecnica":78,"tier":"Prata","ex":false,"invencivel":false},{"id":"080","nome":"Izuru Kira","forma":"Dead Man","tipo":"Shinigami","tipo2":[],"overall":78,"reiatsu":74,"ataque":82,"defesa":84,"velocidade":70,"tecnica":70,"tier":"Ouro","ex":false,"invencivel":false},{"id":"081","nome":"Isane Kotetsu","forma":"","tipo":"Shinigami","tipo2":[],"overall":72,"reiatsu":74,"ataque":66,"defesa":70,"velocidade":72,"tecnica":80,"tier":"Prata","ex":false,"invencivel":false},{"id":"082","nome":"Shūhei Hisagi","forma":"","tipo":"Shinigami","tipo2":[],"overall":78,"reiatsu":78,"ataque":80,"defesa":74,"velocidade":78,"tecnica":76,"tier":"Ouro","ex":false,"invencivel":false},{"id":"083","nome":"Momo Hinamori","forma":"","tipo":"Shinigami","tipo2":[],"overall":72,"reiatsu":76,"ataque":70,"defesa":66,"velocidade":72,"tecnica":80,"tier":"Prata","ex":false,"invencivel":false},{"id":"084","nome":"Tetsuzaemon Iba","forma":"","tipo":"Shinigami","tipo2":[],"overall":70,"reiatsu":68,"ataque":74,"defesa":70,"velocidade":68,"tecnica":66,"tier":"Prata","ex":false,"invencivel":false},{"id":"085","nome":"Nanao Ise","forma":"Base","tipo":"Shinigami","tipo2":[],"overall":73,"reiatsu":76,"ataque":68,"defesa":66,"velocidade":72,"tecnica":82,"tier":"Prata","ex":false,"invencivel":false},{"id":"086","nome":"Nanao Ise","forma":"Shinken Hakkyōken","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":84,"ataque":82,"defesa":74,"velocidade":78,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"087","nome":"Rangiku Matsumoto","forma":"","tipo":"Shinigami","tipo2":[],"overall":74,"reiatsu":74,"ataque":74,"defesa":70,"velocidade":78,"tecnica":72,"tier":"Prata","ex":false,"invencivel":false},{"id":"088","nome":"Nemu Kurotsuchi","forma":"","tipo":"Shinigami","tipo2":[],"overall":76,"reiatsu":74,"ataque":82,"defesa":76,"velocidade":78,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"089","nome":"Rukia Kuchiki","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":78,"reiatsu":76,"ataque":76,"defesa":72,"velocidade":80,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"090","nome":"Rukia Kuchiki","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":86,"reiatsu":84,"ataque":86,"defesa":82,"velocidade":84,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"091","nome":"Kaien Shiba","forma":"","tipo":"Shinigami","tipo2":[],"overall":80,"reiatsu":80,"ataque":82,"defesa":76,"velocidade":82,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"092","nome":"Yumichika Ayasegawa","forma":"","tipo":"Shinigami","tipo2":[],"overall":76,"reiatsu":78,"ataque":76,"defesa":72,"velocidade":78,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"093","nome":"Aaroniero Arruruerie","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":78,"reiatsu":80,"ataque":78,"defesa":74,"velocidade":72,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"094","nome":"Aaroniero Arruruerie","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":84,"reiatsu":86,"ataque":84,"defesa":80,"velocidade":70,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"095","nome":"Szayelaporro Granz","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":80,"reiatsu":80,"ataque":76,"defesa":74,"velocidade":78,"tecnica":94,"tier":"Ouro","ex":false,"invencivel":false},{"id":"096","nome":"Szayelaporro Granz","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":85,"reiatsu":82,"ataque":82,"defesa":78,"velocidade":80,"tecnica":96,"tier":"Ouro","ex":false,"invencivel":false},{"id":"097","nome":"Zommari Rureaux","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":81,"reiatsu":80,"ataque":80,"defesa":76,"velocidade":90,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"098","nome":"Zommari Rureaux","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":85,"reiatsu":82,"ataque":82,"defesa":78,"velocidade":92,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"099","nome":"Luppi Antenor","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":76,"reiatsu":76,"ataque":78,"defesa":72,"velocidade":76,"tecnica":70,"tier":"Ouro","ex":false,"invencivel":false},{"id":"100","nome":"Luppi Antenor","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":80,"reiatsu":78,"ataque":82,"defesa":76,"velocidade":78,"tecnica":70,"tier":"Ouro","ex":false,"invencivel":false},{"id":"101","nome":"Grimmjow Jaegerjaquez","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":84,"reiatsu":84,"ataque":88,"defesa":78,"velocidade":88,"tecnica":72,"tier":"Ouro","ex":false,"invencivel":false},{"id":"102","nome":"Grimmjow Jaegerjaquez","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":88,"reiatsu":86,"ataque":92,"defesa":82,"velocidade":92,"tecnica":74,"tier":"Lendária","ex":false,"invencivel":false},{"id":"103","nome":"Grimmjow Jaegerjaquez","forma":"Guerra","tipo":"Arrancar","tipo2":["Hollow"],"overall":90,"reiatsu":88,"ataque":94,"defesa":84,"velocidade":92,"tecnica":76,"tier":"Lendária","ex":false,"invencivel":false},{"id":"104","nome":"Nnoitra Gilga","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":84,"reiatsu":82,"ataque":88,"defesa":92,"velocidade":78,"tecnica":66,"tier":"Ouro","ex":false,"invencivel":false},{"id":"105","nome":"Nnoitra Gilga","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":88,"reiatsu":84,"ataque":92,"defesa":94,"velocidade":80,"tecnica":66,"tier":"Lendária","ex":false,"invencivel":false},{"id":"106","nome":"Ulquiorra Cifer","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":88,"reiatsu":90,"ataque":86,"defesa":86,"velocidade":88,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"107","nome":"Ulquiorra Cifer","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":91,"reiatsu":92,"ataque":90,"defesa":88,"velocidade":90,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"108","nome":"Ulquiorra Cifer","forma":"Resurrección Segunda Etapa","tipo":"Arrancar","tipo2":["Hollow"],"overall":93,"reiatsu":94,"ataque":93,"defesa":90,"velocidade":92,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"109","nome":"Tier Harribel","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":86,"reiatsu":86,"ataque":86,"defesa":84,"velocidade":84,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"110","nome":"Tier Harribel","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":90,"reiatsu":90,"ataque":90,"defesa":86,"velocidade":86,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"111","nome":"Nelliel Tu Odelschwanck","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":85,"reiatsu":84,"ataque":86,"defesa":82,"velocidade":84,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"112","nome":"Nelliel Tu Odelschwanck","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":90,"reiatsu":88,"ataque":92,"defesa":86,"velocidade":86,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"113","nome":"Baraggan Louisenbairn","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":87,"reiatsu":90,"ataque":84,"defesa":84,"velocidade":70,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"114","nome":"Baraggan Louisenbairn","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":91,"reiatsu":94,"ataque":88,"defesa":86,"velocidade":68,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"115","nome":"Coyote Starrk","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":89,"reiatsu":90,"ataque":88,"defesa":84,"velocidade":90,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"116","nome":"Coyote Starrk","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":92,"reiatsu":92,"ataque":92,"defesa":86,"velocidade":92,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"117","nome":"Ayon","forma":"","tipo":"Hollow","tipo2":["Arrancar"],"overall":84,"reiatsu":86,"ataque":92,"defesa":88,"velocidade":72,"tecnica":50,"tier":"Ouro","ex":false,"invencivel":false},{"id":"118","nome":"Wonderweiss Margela","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":82,"reiatsu":88,"ataque":78,"defesa":80,"velocidade":84,"tecnica":40,"tier":"Ouro","ex":false,"invencivel":false},{"id":"119","nome":"Wonderweiss Margela","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":86,"reiatsu":90,"ataque":86,"defesa":84,"velocidade":86,"tecnica":42,"tier":"Ouro","ex":false,"invencivel":false},{"id":"120","nome":"Yammy Llargo","forma":"Base","tipo":"Arrancar","tipo2":["Hollow"],"overall":84,"reiatsu":88,"ataque":90,"defesa":86,"velocidade":64,"tecnica":50,"tier":"Ouro","ex":false,"invencivel":false},{"id":"121","nome":"Yammy Llargo","forma":"Resurrección","tipo":"Arrancar","tipo2":["Hollow"],"overall":88,"reiatsu":92,"ataque":94,"defesa":90,"velocidade":56,"tecnica":48,"tier":"Lendária","ex":false,"invencivel":false},{"id":"122","nome":"Yammy Llargo","forma":"Resurrección Segunda Fase","tipo":"Arrancar","tipo2":["Hollow"],"overall":90,"reiatsu":94,"ataque":96,"defesa":92,"velocidade":52,"tecnica":48,"tier":"Lendária","ex":false,"invencivel":false},{"id":"123","nome":"Rudbornn Chelute","forma":"","tipo":"Arrancar","tipo2":["Hollow"],"overall":76,"reiatsu":76,"ataque":74,"defesa":78,"velocidade":70,"tecnica":72,"tier":"Ouro","ex":false,"invencivel":false},{"id":"124","nome":"Shūkurō Tsukishima","forma":"","tipo":"Fullbringer","tipo2":["Humano"],"overall":82,"reiatsu":80,"ataque":82,"defesa":76,"velocidade":82,"tecnica":90,"tier":"Ouro","ex":false,"invencivel":false},{"id":"125","nome":"Kūgo Ginjō","forma":"Base","tipo":"Fullbringer","tipo2":["Humano"],"overall":84,"reiatsu":82,"ataque":86,"defesa":80,"velocidade":84,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"126","nome":"Kūgo Ginjō","forma":"Bankai","tipo":"Fullbringer","tipo2":["Shinigami"],"overall":88,"reiatsu":86,"ataque":90,"defesa":84,"velocidade":86,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"127","nome":"Riruka Dokugamine","forma":"","tipo":"Fullbringer","tipo2":["Humano"],"overall":70,"reiatsu":70,"ataque":66,"defesa":66,"velocidade":70,"tecnica":78,"tier":"Prata","ex":false,"invencivel":false},{"id":"128","nome":"Jackie Tristan","forma":"","tipo":"Fullbringer","tipo2":["Humano"],"overall":70,"reiatsu":68,"ataque":76,"defesa":72,"velocidade":72,"tecnica":64,"tier":"Prata","ex":false,"invencivel":false},{"id":"129","nome":"Giriko Kutsuzawa","forma":"","tipo":"Fullbringer","tipo2":["Humano"],"overall":68,"reiatsu":68,"ataque":66,"defesa":66,"velocidade":64,"tecnica":76,"tier":"Prata","ex":false,"invencivel":false},{"id":"130","nome":"Yukio Hans Vorarlberna","forma":"","tipo":"Fullbringer","tipo2":["Humano"],"overall":70,"reiatsu":72,"ataque":64,"defesa":66,"velocidade":70,"tecnica":82,"tier":"Prata","ex":false,"invencivel":false},{"id":"131","nome":"Aura Michibane","forma":"","tipo":"Fullbringer","tipo2":["Humano"],"overall":88,"reiatsu":88,"ataque":86,"defesa":84,"velocidade":86,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"132","nome":"Yhwach","forma":"Base","tipo":"Quincy","tipo2":[],"overall":92,"reiatsu":94,"ataque":90,"defesa":90,"velocidade":88,"tecnica":94,"tier":"Lendária","ex":false,"invencivel":false},{"id":"133","nome":"Yhwach","forma":"The Almighty","tipo":"Quincy","tipo2":[],"overall":97,"reiatsu":98,"ataque":94,"defesa":94,"velocidade":92,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"134","nome":"Yhwach","forma":"The Almighty + Rei das Almas","tipo":"Quincy","tipo2":["Divino"],"overall":100,"reiatsu":99,"ataque":96,"defesa":97,"velocidade":94,"tecnica":99,"tier":"EX","ex":true,"invencivel":false},{"id":"135","nome":"Yhwach","forma":"Jovem","tipo":"Quincy","tipo2":[],"overall":90,"reiatsu":92,"ataque":86,"defesa":88,"velocidade":86,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"136","nome":"Jugram Haschwalth","forma":"Base","tipo":"Quincy","tipo2":[],"overall":90,"reiatsu":90,"ataque":90,"defesa":86,"velocidade":90,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"137","nome":"Jugram Haschwalth","forma":"The Almighty","tipo":"Quincy","tipo2":[],"overall":94,"reiatsu":94,"ataque":92,"defesa":90,"velocidade":92,"tecnica":94,"tier":"Lendária","ex":false,"invencivel":false},{"id":"138","nome":"Pernida Parnkgjas","forma":"Base","tipo":"Quincy","tipo2":["Divino"],"overall":90,"reiatsu":92,"ataque":88,"defesa":88,"velocidade":84,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"139","nome":"Pernida Parnkgjas","forma":"Forma Verdadeira","tipo":"Quincy","tipo2":["Divino"],"overall":94,"reiatsu":96,"ataque":90,"defesa":92,"velocidade":82,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"140","nome":"Askin Nakk Le Vaar","forma":"Base","tipo":"Quincy","tipo2":[],"overall":89,"reiatsu":90,"ataque":84,"defesa":88,"velocidade":86,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"141","nome":"Askin Nakk Le Vaar","forma":"Vollständig","tipo":"Quincy","tipo2":[],"overall":92,"reiatsu":94,"ataque":86,"defesa":90,"velocidade":88,"tecnica":94,"tier":"Lendária","ex":false,"invencivel":false},{"id":"142","nome":"Lille Barro","forma":"Base","tipo":"Quincy","tipo2":[],"overall":91,"reiatsu":92,"ataque":92,"defesa":88,"velocidade":88,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"143","nome":"Lille Barro","forma":"Vollständig","tipo":"Quincy","tipo2":[],"overall":94,"reiatsu":94,"ataque":94,"defesa":92,"velocidade":90,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"144","nome":"Lille Barro","forma":"Vollständig Segunda Forma","tipo":"Quincy","tipo2":[],"overall":95,"reiatsu":96,"ataque":96,"defesa":94,"velocidade":86,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"145","nome":"Gerard Valkyrie","forma":"Base","tipo":"Quincy","tipo2":[],"overall":92,"reiatsu":92,"ataque":94,"defesa":92,"velocidade":82,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"146","nome":"Gerard Valkyrie","forma":"Vollständig","tipo":"Quincy","tipo2":[],"overall":95,"reiatsu":94,"ataque":98,"defesa":96,"velocidade":80,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"147","nome":"Äs Nödt","forma":"Base","tipo":"Quincy","tipo2":[],"overall":87,"reiatsu":88,"ataque":84,"defesa":82,"velocidade":84,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"148","nome":"Äs Nödt","forma":"Vollständig","tipo":"Quincy","tipo2":[],"overall":90,"reiatsu":90,"ataque":88,"defesa":86,"velocidade":86,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"149","nome":"Gremmy Thoumeaux","forma":"","tipo":"Quincy","tipo2":[],"overall":91,"reiatsu":94,"ataque":90,"defesa":86,"velocidade":84,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"150","nome":"Bazz-B","forma":"","tipo":"Quincy","tipo2":[],"overall":87,"reiatsu":88,"ataque":90,"defesa":80,"velocidade":86,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"151","nome":"Cang Du","forma":"","tipo":"Quincy","tipo2":[],"overall":82,"reiatsu":82,"ataque":84,"defesa":90,"velocidade":78,"tecnica":76,"tier":"Ouro","ex":false,"invencivel":false},{"id":"152","nome":"Quilge Opie","forma":"Base","tipo":"Quincy","tipo2":[],"overall":84,"reiatsu":84,"ataque":84,"defesa":82,"velocidade":84,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"153","nome":"Quilge Opie","forma":"Vollständig","tipo":"Quincy","tipo2":[],"overall":88,"reiatsu":88,"ataque":88,"defesa":86,"velocidade":86,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"154","nome":"BG9","forma":"","tipo":"Quincy","tipo2":[],"overall":83,"reiatsu":84,"ataque":82,"defesa":84,"velocidade":78,"tecnica":88,"tier":"Ouro","ex":false,"invencivel":false},{"id":"155","nome":"Pepe Waccabrada","forma":"","tipo":"Quincy","tipo2":[],"overall":80,"reiatsu":84,"ataque":70,"defesa":74,"velocidade":70,"tecnica":88,"tier":"Ouro","ex":false,"invencivel":false},{"id":"156","nome":"Robert Accutrone","forma":"","tipo":"Quincy","tipo2":[],"overall":81,"reiatsu":82,"ataque":84,"defesa":78,"velocidade":82,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"157","nome":"Driscoll Berci","forma":"","tipo":"Quincy","tipo2":[],"overall":80,"reiatsu":80,"ataque":86,"defesa":78,"velocidade":78,"tecnica":72,"tier":"Ouro","ex":false,"invencivel":false},{"id":"158","nome":"Nianzol Weizol","forma":"","tipo":"Quincy","tipo2":[],"overall":80,"reiatsu":82,"ataque":78,"defesa":80,"velocidade":76,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"159","nome":"Berenice Gabrielli","forma":"","tipo":"Quincy","tipo2":[],"overall":76,"reiatsu":78,"ataque":74,"defesa":72,"velocidade":74,"tecnica":76,"tier":"Ouro","ex":false,"invencivel":false},{"id":"160","nome":"Jerome Guizbatt","forma":"","tipo":"Quincy","tipo2":[],"overall":76,"reiatsu":74,"ataque":82,"defesa":76,"velocidade":72,"tecnica":60,"tier":"Ouro","ex":false,"invencivel":false},{"id":"161","nome":"Mask De Masculine","forma":"","tipo":"Quincy","tipo2":[],"overall":88,"reiatsu":84,"ataque":92,"defesa":88,"velocidade":84,"tecnica":64,"tier":"Lendária","ex":false,"invencivel":false},{"id":"162","nome":"Loyd e Royd Lloyd","forma":"","tipo":"Quincy","tipo2":[],"overall":84,"reiatsu":84,"ataque":84,"defesa":82,"velocidade":82,"tecnica":88,"tier":"Ouro","ex":false,"invencivel":false},{"id":"163","nome":"NaNaNa Najahkoop","forma":"","tipo":"Quincy","tipo2":[],"overall":80,"reiatsu":80,"ataque":80,"defesa":78,"velocidade":78,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"164","nome":"Bambietta Basterbine","forma":"","tipo":"Quincy","tipo2":[],"overall":82,"reiatsu":84,"ataque":86,"defesa":76,"velocidade":80,"tecnica":76,"tier":"Ouro","ex":false,"invencivel":false},{"id":"165","nome":"Giselle Gewelle","forma":"","tipo":"Quincy","tipo2":[],"overall":81,"reiatsu":82,"ataque":76,"defesa":80,"velocidade":78,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"166","nome":"Candice Catnipp","forma":"","tipo":"Quincy","tipo2":[],"overall":84,"reiatsu":84,"ataque":90,"defesa":78,"velocidade":90,"tecnica":74,"tier":"Ouro","ex":false,"invencivel":false},{"id":"167","nome":"Meninas McAllon","forma":"","tipo":"Quincy","tipo2":[],"overall":83,"reiatsu":80,"ataque":92,"defesa":84,"velocidade":76,"tecnica":66,"tier":"Ouro","ex":false,"invencivel":false},{"id":"168","nome":"Liltotto Lamperd","forma":"","tipo":"Quincy","tipo2":[],"overall":82,"reiatsu":82,"ataque":84,"defesa":82,"velocidade":80,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"169","nome":"Guenael Lee","forma":"","tipo":"Quincy","tipo2":[],"overall":74,"reiatsu":74,"ataque":74,"defesa":70,"velocidade":80,"tecnica":70,"tier":"Prata","ex":false,"invencivel":false},{"id":"170","nome":"Shaz Domino","forma":"","tipo":"Quincy","tipo2":[],"overall":74,"reiatsu":74,"ataque":74,"defesa":72,"velocidade":74,"tecnica":72,"tier":"Prata","ex":false,"invencivel":false},{"id":"171","nome":"Ivan Azgiaro","forma":"","tipo":"Quincy","tipo2":[],"overall":72,"reiatsu":72,"ataque":74,"defesa":70,"velocidade":72,"tecnica":68,"tier":"Prata","ex":false,"invencivel":false},{"id":"172","nome":"Don Kanonji","forma":"","tipo":"Humano","tipo2":[],"overall":52,"reiatsu":48,"ataque":50,"defesa":46,"velocidade":55,"tecnica":58,"tier":"Bronze","ex":false,"invencivel":false},{"id":"173","nome":"Kon","forma":"","tipo":"Humano","tipo2":[],"overall":58,"reiatsu":40,"ataque":75,"defesa":45,"velocidade":60,"tecnica":30,"tier":"Bronze","ex":false,"invencivel":false},{"id":"174","nome":"Yasutora Sado","forma":"Base","tipo":"Humano","tipo2":["Fullbringer"],"overall":74,"reiatsu":76,"ataque":84,"defesa":80,"velocidade":66,"tecnica":56,"tier":"Prata","ex":false,"invencivel":false},{"id":"175","nome":"Yasutora Sado","forma":"Ambos os Braços","tipo":"Humano","tipo2":["Fullbringer"],"overall":80,"reiatsu":80,"ataque":88,"defesa":84,"velocidade":68,"tecnica":58,"tier":"Ouro","ex":false,"invencivel":false},{"id":"176","nome":"Orihime Inoue","forma":"","tipo":"Humano","tipo2":[],"overall":76,"reiatsu":82,"ataque":48,"defesa":90,"velocidade":60,"tecnica":92,"tier":"Ouro","ex":false,"invencivel":false},{"id":"177","nome":"Ryūken Ishida","forma":"","tipo":"Quincy","tipo2":[],"overall":82,"reiatsu":84,"ataque":82,"defesa":76,"velocidade":82,"tecnica":86,"tier":"Ouro","ex":false,"invencivel":false},{"id":"178","nome":"Ururu Tsumugiya","forma":"","tipo":"Humano","tipo2":[],"overall":68,"reiatsu":64,"ataque":80,"defesa":64,"velocidade":74,"tecnica":56,"tier":"Prata","ex":false,"invencivel":false},{"id":"179","nome":"Jinta Hanakari","forma":"","tipo":"Humano","tipo2":[],"overall":58,"reiatsu":50,"ataque":66,"defesa":56,"velocidade":60,"tecnica":48,"tier":"Bronze","ex":false,"invencivel":false},{"id":"180","nome":"Ichigo Kurosaki","forma":"Inicial","tipo":"Shinigami","tipo2":[],"overall":76,"reiatsu":84,"ataque":82,"defesa":72,"velocidade":74,"tecnica":58,"tier":"Ouro","ex":false,"invencivel":false},{"id":"181","nome":"Ichigo Kurosaki","forma":"Shikai","tipo":"Shinigami","tipo2":[],"overall":84,"reiatsu":88,"ataque":86,"defesa":78,"velocidade":82,"tecnica":64,"tier":"Ouro","ex":false,"invencivel":false},{"id":"182","nome":"Ichigo Kurosaki","forma":"Bankai","tipo":"Shinigami","tipo2":[],"overall":89,"reiatsu":90,"ataque":90,"defesa":82,"velocidade":92,"tecnica":70,"tier":"Lendária","ex":false,"invencivel":false},{"id":"183","nome":"Ichigo Kurosaki","forma":"Bankai + Hollow Mask","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":92,"reiatsu":92,"ataque":94,"defesa":84,"velocidade":94,"tecnica":72,"tier":"Lendária","ex":false,"invencivel":false},{"id":"184","nome":"Ichigo Kurosaki","forma":"Vasto Lorde","tipo":"Hollow","tipo2":[],"overall":94,"reiatsu":96,"ataque":96,"defesa":88,"velocidade":92,"tecnica":50,"tier":"Lendária","ex":false,"invencivel":false},{"id":"185","nome":"Ichigo Kurosaki","forma":"Dangai","tipo":"Shinigami","tipo2":[],"overall":95,"reiatsu":96,"ataque":94,"defesa":88,"velocidade":96,"tecnica":80,"tier":"Lendária","ex":false,"invencivel":false},{"id":"186","nome":"Ichigo Kurosaki","forma":"Mugetsu","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":99,"ataque":98,"defesa":88,"velocidade":95,"tecnica":78,"tier":"Mítica","ex":false,"invencivel":false},{"id":"187","nome":"Ichigo Kurosaki","forma":"Fullbring 1ª Forma","tipo":"Fullbringer","tipo2":[],"overall":80,"reiatsu":80,"ataque":82,"defesa":74,"velocidade":84,"tecnica":66,"tier":"Ouro","ex":false,"invencivel":false},{"id":"188","nome":"Ichigo Kurosaki","forma":"Fullbring 2ª Forma","tipo":"Fullbringer","tipo2":[],"overall":84,"reiatsu":84,"ataque":86,"defesa":80,"velocidade":86,"tecnica":68,"tier":"Ouro","ex":false,"invencivel":false},{"id":"189","nome":"Ichigo Kurosaki","forma":"Fullbring 3ª Forma","tipo":"Fullbringer","tipo2":[],"overall":87,"reiatsu":86,"ataque":90,"defesa":82,"velocidade":88,"tecnica":70,"tier":"Ouro","ex":false,"invencivel":false},{"id":"190","nome":"Ichigo Kurosaki","forma":"Fullbring Shikai","tipo":"Shinigami","tipo2":["Fullbringer"],"overall":90,"reiatsu":92,"ataque":92,"defesa":84,"velocidade":90,"tecnica":72,"tier":"Lendária","ex":false,"invencivel":false},{"id":"191","nome":"Ichigo Kurosaki","forma":"Fullbring Bankai","tipo":"Shinigami","tipo2":["Fullbringer"],"overall":93,"reiatsu":94,"ataque":94,"defesa":86,"velocidade":94,"tecnica":74,"tier":"Lendária","ex":false,"invencivel":false},{"id":"192","nome":"Ichigo Kurosaki","forma":"True Shikai","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":94,"ataque":95,"defesa":88,"velocidade":92,"tecnica":76,"tier":"Lendária","ex":false,"invencivel":false},{"id":"193","nome":"Ichigo Kurosaki","forma":"True Bankai + Horn of Salvation","tipo":"Shinigami","tipo2":[],"overall":97,"reiatsu":97,"ataque":98,"defesa":94,"velocidade":95,"tecnica":90,"tier":"Mítica","ex":false,"invencivel":false},{"id":"194","nome":"White Zangetsu / Hollow Ichigo","forma":"Base","tipo":"Hollow","tipo2":[],"overall":88,"reiatsu":92,"ataque":92,"defesa":82,"velocidade":92,"tecnica":56,"tier":"Lendária","ex":false,"invencivel":false},{"id":"195","nome":"White Zangetsu / Hollow Ichigo","forma":"Vasto Lorde","tipo":"Hollow","tipo2":[],"overall":93,"reiatsu":96,"ataque":96,"defesa":88,"velocidade":92,"tecnica":54,"tier":"Lendária","ex":false,"invencivel":false},{"id":"196","nome":"White Zangetsu / Hollow Ichigo","forma":"Um Chifre","tipo":"Hollow","tipo2":[],"overall":95,"reiatsu":96,"ataque":96,"defesa":90,"velocidade":94,"tecnica":80,"tier":"Lendária","ex":false,"invencivel":false},{"id":"197","nome":"Velho Zangetsu","forma":"","tipo":"Shinigami","tipo2":["Quincy"],"overall":90,"reiatsu":94,"ataque":88,"defesa":86,"velocidade":88,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"198","nome":"Uryū Ishida","forma":"Inicial","tipo":"Quincy","tipo2":[],"overall":74,"reiatsu":78,"ataque":78,"defesa":68,"velocidade":78,"tecnica":80,"tier":"Prata","ex":false,"invencivel":false},{"id":"199","nome":"Uryū Ishida","forma":"Letzt Stil","tipo":"Quincy","tipo2":[],"overall":84,"reiatsu":88,"ataque":86,"defesa":74,"velocidade":84,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"200","nome":"Uryū Ishida","forma":"Sternritter","tipo":"Quincy","tipo2":[],"overall":88,"reiatsu":90,"ataque":86,"defesa":82,"velocidade":86,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"201","nome":"Uryū Ishida","forma":"Vollständig","tipo":"Quincy","tipo2":[],"overall":91,"reiatsu":92,"ataque":88,"defesa":84,"velocidade":88,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"202","nome":"Sōsuke Aizen","forma":"Base","tipo":"Shinigami","tipo2":[],"overall":93,"reiatsu":93,"ataque":90,"defesa":88,"velocidade":90,"tecnica":99,"tier":"Lendária","ex":false,"invencivel":false},{"id":"203","nome":"Sōsuke Aizen","forma":"Hōgyoku Crisálida","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":94,"ataque":90,"defesa":92,"velocidade":90,"tecnica":99,"tier":"Lendária","ex":false,"invencivel":false},{"id":"204","nome":"Sōsuke Aizen","forma":"Hōgyoku Pós Crisálida","tipo":"Shinigami","tipo2":[],"overall":95,"reiatsu":95,"ataque":92,"defesa":93,"velocidade":91,"tecnica":99,"tier":"Lendária","ex":false,"invencivel":false},{"id":"205","nome":"Sōsuke Aizen","forma":"Hōgyoku Borboleta","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":96,"ataque":93,"defesa":94,"velocidade":92,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"206","nome":"Sōsuke Aizen","forma":"Hōgyoku Monstro","tipo":"Shinigami","tipo2":[],"overall":97,"reiatsu":98,"ataque":95,"defesa":95,"velocidade":92,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"207","nome":"Sōsuke Aizen","forma":"Guerra (Na Cadeira)","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":98,"ataque":90,"defesa":92,"velocidade":88,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"208","nome":"Sōsuke Aizen","forma":"Guerra (Sem Cadeira)","tipo":"Shinigami","tipo2":[],"overall":98,"reiatsu":99,"ataque":95,"defesa":94,"velocidade":95,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"209","nome":"Sōsuke Aizen","forma":"Transcendental","tipo":"Shinigami","tipo2":[],"overall":99,"reiatsu":99,"ataque":96,"defesa":95,"velocidade":96,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"210","nome":"Coyote Starrk","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":96,"reiatsu":96,"ataque":96,"defesa":90,"velocidade":96,"tecnica":90,"tier":"Mítica","ex":false,"invencivel":false},{"id":"211","nome":"Baraggan Louisenbairn","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":95,"reiatsu":97,"ataque":92,"defesa":90,"velocidade":74,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"212","nome":"Tier Harribel","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":95,"reiatsu":95,"ataque":94,"defesa":90,"velocidade":90,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"213","nome":"Ulquiorra Cifer","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":97,"reiatsu":98,"ataque":96,"defesa":94,"velocidade":95,"tecnica":90,"tier":"Mítica","ex":false,"invencivel":false},{"id":"214","nome":"Nnoitra Gilga","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":93,"reiatsu":90,"ataque":96,"defesa":97,"velocidade":84,"tecnica":68,"tier":"Lendária","ex":false,"invencivel":false},{"id":"215","nome":"Grimmjow Jaegerjaquez","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":94,"reiatsu":92,"ataque":96,"defesa":86,"velocidade":96,"tecnica":78,"tier":"Lendária","ex":false,"invencivel":false},{"id":"216","nome":"Zommari Rureaux","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":90,"reiatsu":86,"ataque":86,"defesa":82,"velocidade":96,"tecnica":88,"tier":"Lendária","ex":false,"invencivel":false},{"id":"217","nome":"Szayelaporro Granz","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":90,"reiatsu":86,"ataque":86,"defesa":82,"velocidade":84,"tecnica":98,"tier":"Lendária","ex":false,"invencivel":false},{"id":"218","nome":"Aaroniero Arruruerie","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":89,"reiatsu":90,"ataque":88,"defesa":84,"velocidade":74,"tecnica":84,"tier":"Lendária","ex":false,"invencivel":false},{"id":"219","nome":"Yammy Llargo","forma":"Beyond Resurrection","tipo":"Arrancar","tipo2":["Hollow"],"overall":94,"reiatsu":96,"ataque":98,"defesa":94,"velocidade":58,"tecnica":50,"tier":"Lendária","ex":false,"invencivel":false},{"id":"220","nome":"Genryūsai Shigekuni Yamamoto","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":97,"reiatsu":98,"ataque":99,"defesa":93,"velocidade":90,"tecnica":94,"tier":"Mítica","ex":false,"invencivel":false},{"id":"221","nome":"Shunsui Kyōraku","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":94,"ataque":94,"defesa":88,"velocidade":92,"tecnica":97,"tier":"Mítica","ex":false,"invencivel":false},{"id":"222","nome":"Kenpachi Zaraki","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":97,"reiatsu":96,"ataque":99,"defesa":90,"velocidade":90,"tecnica":66,"tier":"Mítica","ex":false,"invencivel":false},{"id":"223","nome":"Retsu Unohana","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":94,"ataque":96,"defesa":92,"velocidade":92,"tecnica":96,"tier":"Mítica","ex":false,"invencivel":false},{"id":"224","nome":"Tōshirō Hitsugaya","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":95,"reiatsu":92,"ataque":94,"defesa":88,"velocidade":95,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"225","nome":"Byakuya Kuchiki","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":90,"ataque":94,"defesa":86,"velocidade":95,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"226","nome":"Gin Ichimaru","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":90,"ataque":96,"defesa":84,"velocidade":95,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"227","nome":"Sajin Komamura","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":93,"reiatsu":90,"ataque":96,"defesa":92,"velocidade":82,"tecnica":74,"tier":"Lendária","ex":false,"invencivel":false},{"id":"228","nome":"Shinji Hirako","forma":"Beyond Bankai","tipo":"Vizard","tipo2":["Shinigami","Hollow"],"overall":94,"reiatsu":92,"ataque":94,"defesa":86,"velocidade":94,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"229","nome":"Mayuri Kurotsuchi","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":90,"ataque":92,"defesa":88,"velocidade":82,"tecnica":99,"tier":"Lendária","ex":false,"invencivel":false},{"id":"230","nome":"Kaname Tōsen","forma":"Beyond Bankai","tipo":"Arrancar","tipo2":["Hollow"],"overall":93,"reiatsu":92,"ataque":94,"defesa":86,"velocidade":94,"tecnica":86,"tier":"Lendária","ex":false,"invencivel":false},{"id":"231","nome":"Jūshirō Ukitake","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":94,"reiatsu":96,"ataque":90,"defesa":90,"velocidade":88,"tecnica":92,"tier":"Lendária","ex":false,"invencivel":false},{"id":"232","nome":"Kisuke Urahara","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":96,"reiatsu":94,"ataque":92,"defesa":90,"velocidade":92,"tecnica":99,"tier":"Mítica","ex":false,"invencivel":false},{"id":"233","nome":"Yoruichi Shihōin","forma":"Beyond Bankai","tipo":"Shinigami","tipo2":[],"overall":95,"reiatsu":92,"ataque":94,"defesa":86,"velocidade":99,"tecnica":90,"tier":"Lendária","ex":false,"invencivel":false},{"id":"234","nome":"Kokutō","forma":"","tipo":"Hollow","tipo2":[],"overall":86,"reiatsu":86,"ataque":88,"defesa":82,"velocidade":84,"tecnica":78,"tier":"Ouro","ex":false,"invencivel":false},{"id":"235","nome":"Ganryū","forma":"","tipo":"Shinigami","tipo2":[],"overall":82,"reiatsu":82,"ataque":84,"defesa":78,"velocidade":82,"tecnica":80,"tier":"Ouro","ex":false,"invencivel":false},{"id":"236","nome":"Dark Rukia","forma":"","tipo":"Shinigami","tipo2":[],"overall":84,"reiatsu":84,"ataque":82,"defesa":78,"velocidade":84,"tecnica":82,"tier":"Ouro","ex":false,"invencivel":false},{"id":"237","nome":"Sōjirō Kusaka","forma":"","tipo":"Shinigami","tipo2":[],"overall":85,"reiatsu":84,"ataque":86,"defesa":80,"velocidade":88,"tecnica":84,"tier":"Ouro","ex":false,"invencivel":false},{"id":"238","nome":"Gotei 13 (Início da Guerra)","forma":"Capitães","tipo":"Esquadrão","tipo2":["Shinigami"],"overall":101,"reiatsu":99,"ataque":99,"defesa":97,"velocidade":95,"tecnica":97,"tier":"EX","ex":true,"invencivel":false},{"id":"239","nome":"Espadas 0-9","forma":"Atuais","tipo":"Esquadrão","tipo2":["Arrancar"],"overall":101,"reiatsu":98,"ataque":98,"defesa":94,"velocidade":92,"tecnica":90,"tier":"EX","ex":true,"invencivel":false},{"id":"240","nome":"Vizards","forma":"Clássicos","tipo":"Esquadrão","tipo2":["Vizard"],"overall":100,"reiatsu":96,"ataque":96,"defesa":90,"velocidade":94,"tecnica":92,"tier":"EX","ex":true,"invencivel":false},{"id":"241","nome":"Gotei 13 Antiga","forma":"Capitães","tipo":"Esquadrão","tipo2":["Shinigami"],"overall":102,"reiatsu":99,"ataque":99,"defesa":96,"velocidade":94,"tecnica":96,"tier":"EX","ex":true,"invencivel":false},{"id":"242","nome":"5 Ameaças Especiais","forma":"Potenciais de Guerra","tipo":"Esquadrão","tipo2":["Misto"],"overall":104,"reiatsu":99,"ataque":99,"defesa":96,"velocidade":97,"tecnica":96,"tier":"EX","ex":true,"invencivel":false},{"id":"243","nome":"Divisão 0","forma":"Guarda Real","tipo":"Esquadrão","tipo2":["Shinigami"],"overall":103,"reiatsu":98,"ataque":96,"defesa":94,"velocidade":92,"tecnica":97,"tier":"EX","ex":true,"invencivel":false},{"id":"244","nome":"Yhwach e a Guarda Real","forma":"com Jugram e Uryū","tipo":"Esquadrão","tipo2":["Quincy"],"overall":104,"reiatsu":99,"ataque":98,"defesa":96,"velocidade":94,"tecnica":98,"tier":"EX","ex":true,"invencivel":false},{"id":"245","nome":"Gotei 13 (Começo de Bleach)","forma":"Capitães","tipo":"Esquadrão","tipo2":["Shinigami"],"overall":101,"reiatsu":98,"ataque":97,"defesa":94,"velocidade":93,"tecnica":96,"tier":"EX","ex":true,"invencivel":false},{"id":"246","nome":"Sternritters","forma":"Todos sem Yhwach","tipo":"Esquadrão","tipo2":["Quincy"],"overall":103,"reiatsu":98,"ataque":98,"defesa":92,"velocidade":94,"tecnica":94,"tier":"EX","ex":true,"invencivel":false},{"id":"247","nome":"Gotei 13 (Começo de Bleach)","forma":"Tenentes","tipo":"Esquadrão","tipo2":["Shinigami"],"overall":100,"reiatsu":92,"ataque":92,"defesa":88,"velocidade":90,"tecnica":88,"tier":"EX","ex":true,"invencivel":false},{"id":"248","nome":"Quinteto Ryoka","forma":"Ichigo, Orihime, Chad, Uryū, Ganju","tipo":"Esquadrão","tipo2":["Misto"],"overall":100,"reiatsu":90,"ataque":92,"defesa":88,"velocidade":86,"tecnica":84,"tier":"EX","ex":true,"invencivel":false},{"id":"249","nome":"4 Kenpachis","forma":"Unohana, Kuruyashiki, Azashiro, Zaraki","tipo":"Esquadrão","tipo2":["Shinigami"],"overall":104,"reiatsu":98,"ataque":99,"defesa":92,"velocidade":92,"tecnica":84,"tier":"EX","ex":true,"invencivel":false},{"id":"250","nome":"Rei das Almas","forma":"God","tipo":"Divino","tipo2":[],"overall":105,"reiatsu":99,"ataque":99,"defesa":99,"velocidade":99,"tecnica":99,"tier":"EX","ex":true,"invencivel":true}];
+CARDS.forEach(c=>{ c.bs = (+c.id>=209 && +c.id<=233); });   // Brave Souls
+const BYID = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const $ = s => document.querySelector(s);
+
+const MODES = {
+  padrao:{ic:"🗡️",t:"Padrão",d:"Faça o draft de 1 time e enfrente a CPU em uma partida."},
+  survival:{ic:"🔥",t:"Sobrevivência",d:"Monte 1 time e enfrente ondas de CPU cada vez mais fortes. Até onde você vai?"},
+  hotseat:{ic:"👥",t:"2 Jogadores",d:"Mesma tela: cada amigo draft o seu time (sem espiar) e os times batalham."},
+  caos:{ic:"💥",t:"Caos",d:"Tudo liberado: cartas EX sem limite e coleção inteira. Partida maluca."},
+};
+const S = {mode:"padrao", vis:"classic", size:5, faction:"all", opts:10, canon:false, allowEX:true, speed:"normal"};
+let TA=[], TB=[], survLevel=1, survStreak=0;
+
+const facsOf=c=>[c.tipo,...(c.tipo2||[])];
+const allowedFac=c=> S.faction==="all" || facsOf(c).includes(S.faction);
+const effAllowEX=()=> S.mode==="caos" ? true : S.allowEX;
+const exLimit=()=> S.mode==="caos" ? 99 : 1;
+const pool=()=> CARDS.filter(c=> allowedFac(c) && (!S.canon||!c.bs) && (effAllowEX()||!c.ex));
+const nameShort=c=> c.nome.split(" ").slice(0,2).join(" ");
+function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.remove('on')); $('#'+id).classList.add('on'); window.scrollTo({top:0,behavior:'smooth'}); }
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1700); }
+
+function cardHTML(c, reveal){
+  const hide=(S.vis==="blind"&&!reveal);
+  const ovr=hide?`<div class="ovr"><b style="color:var(--ash)">?</b><span>OVR</span></div>`:`<div class="ovr"><b>${c.ex?'EX':c.overall}</b><span>OVR</span></div>`;
+  const badge=hide?'':`<span class="badge">${c.tier}</span>`;
+  return `<div class="card t${c.tier}${c.invencivel?' inv':''}" data-id="${c.id}">
+    <img class="art" loading="lazy" src="cartas/${c.id}.jpg" alt=""><div class="scrim"></div><div class="shine"></div>
+    ${ovr}${badge}<div class="nm">${c.nome}</div>${c.forma?`<div class="fm">${c.forma}</div>`:''}<div class="edge"></div></div>`;
+}
+
+/* ===== HOME ===== */
+function renderModes(){
+  $('#modes').innerHTML = Object.entries(MODES).map(([k,m])=>`<div class="mode2 ${S.mode===k?'on':''}" data-m="${k}"><div class="ic">${m.ic}</div><h3>${m.t}</h3><p>${m.d}</p></div>`).join('');
+  $('#modeDesc').textContent = MODES[S.mode].d;
+  $('#modes').querySelectorAll('.mode2').forEach(el=>el.onclick=()=>{ S.mode=el.dataset.m; renderModes(); applyModeUI(); });
+}
+function applyModeUI(){
+  $('#goStart').textContent = S.mode==="survival"?"Iniciar Sobrevivência":S.mode==="hotseat"?"Iniciar (Jogador 1)":"Iniciar Draft";
+  if(S.mode==="caos"){ S.allowEX=true; $('#tgEX').classList.add('on'); }
+}
+function seg(sel,btn){ $(sel).querySelectorAll('button').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+$('#segVis').onclick=e=>{ if(e.target.dataset.v){ S.vis=e.target.dataset.v; seg('#segVis',e.target);} };
+$('#segSize').onclick=e=>{ if(e.target.dataset.s){ S.size=+e.target.dataset.s; seg('#segSize',e.target);} };
+$('#segFac').onclick=e=>{ if(e.target.dataset.f){ S.faction=e.target.dataset.f; seg('#segFac',e.target);} };
+$('#optsR').oninput=e=>{ S.opts=+e.target.value; $('#optsV').textContent=S.opts; };
+$('#tgCanon').onclick=()=>{ S.canon=!S.canon; $('#tgCanon').classList.toggle('on',S.canon); };
+$('#tgEX').onclick=()=>{ if(S.mode==="caos"){ toast("No Caos as cartas EX são sempre liberadas."); return;} S.allowEX=!S.allowEX; $('#tgEX').classList.toggle('on',S.allowEX); };
+$('#goStart').onclick=()=> startGame();
+
+/* ===== DRAFT (genérico) ===== */
+let DR=null;
+function startDraft(target, whoLabel, cb){
+  DR={target,whoLabel,cb,round:0,options:[]}; target.length=0;
+  $('#teamLbl').textContent = whoLabel;
+  show('draft'); draftRound();
+}
+function weightedSample(list, n, exAllowed){
+  const out=[], local=list.slice();
+  while(out.length<n && local.length){
+    const w=local.map(c=> c.ex ? (exAllowed?9:0) : Math.pow(Math.max(1,c.overall-40),1.2)+1);
+    const tot=w.reduce((a,b)=>a+b,0); if(tot<=0) break;
+    let r=Math.random()*tot, idx=0; for(let i=0;i<local.length;i++){ r-=w[i]; if(r<=0){idx=i;break;} }
+    out.push(local.splice(idx,1)[0]);
+  }
+  return out;
+}
+function draftRound(){
+  DR.round++;
+  $('#roundLbl').textContent=`${DR.whoLabel} · Rodada ${DR.round} de ${S.size}`;
+  $('#draftWho').innerHTML=`Escolha <b>1</b> personagem`;
+  const exHere = DR.target.filter(id=>BYID[id].ex).length < exLimit();
+  const p = pool().filter(c=>!DR.target.includes(c.id));
+  DR.options = weightedSample(p, Math.min(S.opts,p.length), exHere);
+  $('#opts').style.gridTemplateColumns=`repeat(${Math.min(5,Math.max(2,S.opts))},1fr)`;
+  $('#opts').innerHTML = DR.options.map(c=>cardHTML(c,false)).join('');
+  $('#opts').querySelectorAll('.card').forEach(el=>el.onclick=()=>draftPick(el.dataset.id));
+  renderDraftTeam();
+}
+function renderDraftTeam(){
+  let h="";
+  for(let i=0;i<S.size;i++) h += DR.target[i]!=null ? `<div class="tslot">${cardHTML(BYID[DR.target[i]],false)}</div>` : `<div class="empty">${i+1}</div>`;
+  $('#team').innerHTML=h;
+}
+function draftPick(id){
+  const c=BYID[id];
+  if(c.ex && DR.target.filter(x=>BYID[x].ex).length>=exLimit()){ toast("Limite de cartas EX atingido."); return; }
+  DR.target.push(id); renderDraftTeam();
+  if(DR.target.length>=S.size){ const cb=DR.cb; setTimeout(cb,350); } else setTimeout(draftRound,240);
+}
+function draftCPU(level){
+  const pick=[], used=new Set(); let exUsed=0, guard=0;
+  const minOvr = 40 + (level||0)*4;           // ondas mais altas = CPU mais forte
+  while(pick.length<S.size && guard++<3000){
+    let p=pool().filter(c=>!used.has(c.id) && !(c.ex&&exUsed>=exLimit()));
+    if(!p.length) break;
+    const w=p.map(c=> c.ex?2.5:Math.pow(Math.max(1,c.overall-minOvr),1.9)+1);
+    let r=Math.random()*w.reduce((a,b)=>a+b,0), idx=0; for(let i=0;i<p.length;i++){ r-=w[i]; if(r<=0){idx=i;break;} }
+    const c=p[idx]; used.add(c.id); if(c.ex) exUsed++; pick.push(c.id);
+  }
+  return pick;
+}
+
+/* ===== MODES ===== */
+function startGame(){
+  if(S.mode==="hotseat"){
+    startDraft(TA=[], "Jogador 1", ()=> interstitial("Passe para o Jogador 2","Sem espiar o time do oponente!",
+      ()=> startDraft(TB=[], "Jogador 2", ()=> battleRun(TA,TB,"Jogador 1","Jogador 2",true,null))));
+  } else if(S.mode==="survival"){
+    startDraft(TA=[], "Você", ()=>{ survLevel=1; survStreak=0; survRun(); });
+  } else { // padrao / caos
+    startDraft(TA=[], "Você", ()=> battleRun(TA, draftCPU(0), "Você", "CPU", false, null));
+  }
+}
+function interstitial(title,msg,cb){ $('#interTitle').textContent=title; $('#interMsg').textContent=msg; show('inter'); $('#interBtn').onclick=()=>cb(); }
+function survRun(){ battleRun(TA, draftCPU(survLevel), "Você", `CPU · Onda ${survLevel}`, false, onSurvResult, `Sobrevivência — Onda ${survLevel} · Sequência: ${survStreak}`); }
+function onSurvResult(aWon){
+  if(aWon){
+    survStreak++;
+    $('#result').innerHTML += `<p style="color:var(--gold);font-family:'Teko';font-size:22px">Onda ${survLevel} vencida! Sequência: ${survStreak}</p>`;
+    $('#battlebar').innerHTML=`<button class="btn cyan sm" id="nextW">Próxima onda (mais forte)</button><button class="btn ghost sm" id="home2">Sair</button>`;
+    $('#nextW').onclick=()=>{ survLevel++; survRun(); }; $('#home2').onclick=()=>show('home');
+  } else {
+    $('#result').innerHTML += `<p style="color:var(--ash);font-size:15px">Você sobreviveu a <b>${survStreak}</b> onda(s).</p>`;
+    $('#battlebar').innerHTML=`<button class="btn cyan sm" id="retry">Recomeçar</button><button class="btn ghost sm" id="home2">Início</button>`;
+    $('#retry').onclick=()=>startGame(); $('#home2').onclick=()=>show('home');
+  }
+}
+
+/* ===== COMBAT ===== */
+const K=20;
+function logistic(oa,ob){ return 1/(1+Math.pow(10,(ob-oa)/K)); }
+function maxHP(c){ return Math.round(110 + c.defesa*0.6 + c.reiatsu*0.4); }
+function hit(a){ return Math.round(a.ataque*0.30*(0.85+Math.random()*0.30)); }
+function simulateDuel(A,B){
+  const mA=maxHP(A), mB=maxHP(B);
+  const pA=A.invencivel?1:B.invencivel?0:logistic(A.overall,B.overall);
+  const aWins=Math.random()<pA; const W=aWins?A:B, Lo=aWins?B:A, inv=W.invencivel;
+  let hpW=aWins?mA:mB, hpL=aWins?mB:mA; const ev=[]; let g=0,_d=0;
+  const rec=a=> ev.push({atk:a,dmg:_d,hpA:aWins?hpW:hpL,hpB:aWins?hpL:hpW});
+  while(hpL>0&&g++<400){
+    const wAtt=inv?true:Math.random()<0.6;
+    if(wAtt){ _d=hit(W); hpL=Math.max(0,hpL-_d); rec(aWins?'A':'B'); }
+    else { _d=hit(Lo); let nv=hpW-_d; if(nv<=0) nv=1+Math.floor(Math.random()*7); hpW=nv; rec(aWins?'B':'A'); }
+  }
+  return {ev,winner:aWins?'A':'B',mA,mB,invincible:inv};
+}
+
+let BS=null;
+function battleRun(teamA, teamB, labelA, labelB, pvp, onFinish, banner){
+  BS={a:0,b:0,skip:false,labelA,labelB,pvp,onFinish, lanes:teamA.map((aid,k)=>{const A=BYID[aid],B=BYID[teamB[k]];return {A,B,sim:simulateDuel(A,B)};})};
+  $('#lblA').textContent=labelA; $('#lblB').textContent=labelB;
+  $('#ptsA').textContent='0'; $('#ptsB').textContent='0'; $('#result').innerHTML='';
+  const bn=$('#banner'); if(banner){ bn.style.display='block'; bn.textContent=banner; } else bn.style.display='none';
+  $('#battlebar').innerHTML=`<button class="btn ghost sm" id="speedBtn">Velocidade: ${S.speed==='fast'?'Rápida':'Normal'}</button><button class="btn ghost sm" id="skipBtn">Pular ⏭</button>`;
+  $('#speedBtn').onclick=()=>{ S.speed=S.speed==='fast'?'normal':'fast'; $('#speedBtn').textContent='Velocidade: '+(S.speed==='fast'?'Rápida':'Normal'); };
+  $('#skipBtn').onclick=()=>{ BS.skip=true; };
+  $('#lanes').innerHTML=BS.lanes.map((L,k)=>laneHTML(L,k)).join('');
+  show('battle'); setTimeout(()=>runLane(0),460);
+}
+function laneHTML(L,k){
+  const {A}=L; const blind=S.vis==="blind";
+  return `<div class="lane" data-k="${k}">
+    <div class="ftr"><div class="mini" id="mA${k}" style="background-image:url(cartas/${A.id}.jpg)"></div>
+      <div class="meta"><b>${nameShort(A)}</b><div class="o" id="oA${k}">${blind?'OVR ?':'OVR '+(A.ex?'EX':A.overall)}</div><div class="hpwrap"><i id="hA${k}"></i></div></div></div>
+    <div class="duelmid" id="mid${k}">—</div>
+    <div class="ftr right"><div class="mini" id="mB${k}" style="background-image:url(cartas/verso.jpg)"></div>
+      <div class="meta"><b id="nB${k}">?</b><div class="o" id="oB${k}">${BS.pvp?'':'CPU'}</div><div class="hpwrap"><i id="hB${k}"></i></div></div></div></div>`;
+}
+function runLane(k){
+  if(k>=BS.lanes.length){ finish(); return; }
+  const L=BS.lanes[k], {A,B,sim}=L; const lane=$(`.lane[data-k="${k}"]`); lane.classList.add('live');
+  $(`#mB${k}`).style.backgroundImage=`url(cartas/${B.id}.jpg)`; $(`#nB${k}`).textContent=nameShort(B);
+  $(`#oB${k}`).textContent='OVR '+(S.vis==="blind"&&BS.pvp?'?':(B.ex?'EX':B.overall));
+  if(S.vis==="blind"){ $(`#oA${k}`).textContent='OVR '+(A.ex?'EX':A.overall); $(`#oB${k}`).textContent='OVR '+(B.ex?'EX':B.overall); }
+  const pA=A.invencivel?1:B.invencivel?0:logistic(A.overall,B.overall);
+  $(`#mid${k}`).innerHTML=`<div class="odds">${Math.round(pA*100)}% · ${Math.round((1-pA)*100)}%</div>${sim.invincible?'<div style="color:var(--gold)">INVENCÍVEL</div>':''}`;
+  const hA=$(`#hA${k}`), hB=$(`#hB${k}`); hA.style.width='100%'; hB.style.width='100%';
+  let i=0; const ev=sim.ev;
+  const apply=e=>{
+    const wa=e.hpA/sim.mA, wb=e.hpB/sim.mB; hA.style.width=(wa*100)+'%'; hB.style.width=(wb*100)+'%';
+    hA.classList.toggle('low',wa<0.35); hB.classList.toggle('low',wb<0.35);
+    const m=$(e.atk==='A'?`#mB${k}`:`#mA${k}`); m.classList.remove('hit'); void m.offsetWidth; m.classList.add('hit');
+    const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+e.dmg; m.appendChild(d); setTimeout(()=>d.remove(),700);
+  };
+  const endLane=()=>{
+    const w=sim.winner; lane.classList.add(w==='A'?'done-a':'done-b');
+    if(w==='A'){ BS.a++; $('#ptsA').textContent=BS.a; } else { BS.b++; $('#ptsB').textContent=BS.b; }
+    $(`#mid${k}`).innerHTML+=`<div class="winflag" style="color:${w==='A'?'var(--rei)':'var(--vm)'}">${w==='A'?'◀ VENCEU':'VENCEU ▶'}</div>`;
+    setTimeout(()=>runLane(k+1), BS.skip?0:380);
+  };
+  const tick=()=>{
+    if(BS.skip){ const last=ev[ev.length-1]; if(last) apply(last); endLane(); return; }
+    if(i>=ev.length){ endLane(); return; }
+    apply(ev[i]); i++; setTimeout(tick, S.speed==='fast'?55:220);
+  };
+  setTimeout(tick, BS.skip?0:260);
+}
+function finish(){
+  const {a,b,pvp,labelA,labelB,onFinish}=BS; const aWon=a>b;
+  let head;
+  if(pvp) head=`<h2 class="${aWon?'win':'lose'}">${aWon?labelA:labelB} venceu!</h2>`;
+  else head=`<h2 class="${aWon?'win':'lose'}">${aWon?'Vitória':'Derrota'}</h2>`;
+  $('#result').innerHTML=`${head}<p style="color:var(--ash);margin:4px 0 12px;font-size:15px">Lanes: ${a} × ${b}</p>`;
+  if(onFinish){ onFinish(aWon); return; }
+  if(pvp){
+    $('#battlebar').innerHTML=`<button class="btn cyan sm" id="again">Nova partida</button><button class="btn ghost sm" id="home2">Início</button>`;
+    $('#again').onclick=()=>startGame(); $('#home2').onclick=()=>show('home');
+  } else {
+    $('#battlebar').innerHTML=`<button class="btn cyan sm" id="again">Novo Draft</button><button class="btn ghost sm" id="rematch">Revanche</button><button class="btn ghost sm" id="home2">Início</button>`;
+    $('#again').onclick=()=>startGame();
+    $('#rematch').onclick=()=>battleRun(TA, draftCPU(0), "Você","CPU",false,null);
+    $('#home2').onclick=()=>show('home');
+  }
+}
+
+renderModes(); applyModeUI();
+</script>
+</body>
+</html>
